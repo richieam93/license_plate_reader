@@ -1,0 +1,6 @@
+easyocr
+imutils
+opencv-python
+matplotlib
+paho-mqtt
+flask

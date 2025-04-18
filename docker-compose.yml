@@ -1,0 +1,28 @@
+version: '3.8'
+
+services:
+  license_plate_reader:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: license_plate_reader
+    environment:
+      - RTSP_STREAM_URL=rtsp://user:password@your_rtsp_stream_url
+      - MQTT_BROKER_URL=mqtt://mqtt_broker_url
+      - MQTT_BROKER_PORT=1883
+      - MQTT_USERNAME=mqtt_user
+      - MQTT_PASSWORD=mqtt_password
+    volumes:
+      - /mnt/data/supervisor/homeassistant/license-plate/data:/data:rw
+    ports:
+      - "5000:5000"  # Webserver Port
+    restart: unless-stopped
+
+  web_server:
+    image: nginx:latest
+    container_name: web_server
+    volumes:
+      - /mnt/data/supervisor/homeassistant/license-plate/web:/usr/share/nginx/html:ro
+    ports:
+      - "8080:80"
+    restart: unless-stopped
