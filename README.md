@@ -153,7 +153,7 @@ Ordnerstruktur
 /capture                  # Bilder von Kerberos
 /processed_images         # Archivierte Bilder mit Datum/Uhrzeit
 /static/latest.jpg        # Letztes erkanntes Bild
-/license_plates.db       # SQLite-Datenbank
+/license_plates.db        # SQLite-Datenbank
 /data/license_plates.txt  # Textdatei mit Erkennungen
 
 
