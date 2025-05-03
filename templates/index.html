@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>License Plate Reader</title>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .container { max-width: 800px; margin: 0 auto; }
+        .plate-display {
+            border: 2px solid #ccc;
+            padding: 20px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        .last-plates { margin-top: 20px; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 10px; border-bottom: 1px solid #ddd; text-align: left; }
+        img { max-width: 100%; height: auto; margin-top: 20px; }
+        .delete-button {
+            background-color: #e74c3c;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 16px;
+            margin: 20px 0;
+            cursor: pointer;
+            border-radius: 4px;
+        }
+        .delete-button:hover {
+            background-color: #c0392b;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>License Plate Reader</h1>
+        
+        <div class="plate-display">
+            <h2>Letztes erkanntes Nummernschild</h2>
+            <img id="latestImage" src="/static/latest.jpg" alt="Letztes Bild">
+            <p>Letzte Erkennung: <span id="lastPlate">Warte auf Erkennung...</span></p>
+            <button class="delete-button" onclick="deleteImages()">Alle Bilder löschen</button>
+        </div>
+
+        <div class="last-plates">
+            <h2>Letzte 10 erkannte Nummernschilder</h2>
+            <table id="platesTable">
+                <thead>
+                    <tr>
+                        <th>Nummernschild</th>
+                        <th>Datum/Uhrzeit</th>
+                    </tr>
+                </thead>
+                <tbody></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        function formatDate(dateStr) {
+            const date = new Date(dateStr);
+            return date.toLocaleString('de-CH', {
+                timeZone: 'Europe/Zurich',
+                year: 'numeric',
+                month: '2-digit',
+                day: '2-digit',
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit'
+            });
+        }
+
+        function refreshData() {
+            axios.get('/api/plates')
+                .then(response => {
+                    const data = response.data;
+                    
+                    if (data.length > 0) {
+                        // Letztes Bild aktualisieren
+                        document.getElementById('lastPlate').textContent = data[0].plate_number;
+                        document.getElementById('latestImage').src = `/static/latest.jpg?${new Date().getTime()}`;
+                        
+                        // Tabelle aktualisieren
+                        const tableBody = document.getElementById('platesTable').querySelector('tbody');
+                        tableBody.innerHTML = '';
+                        
+                        data.forEach(entry => {
+                            const row = tableBody.insertRow();
+                            row.insertCell(0).textContent = entry.plate_number;
+                            row.insertCell(1).textContent = formatDate(entry.timestamp);
+                        });
+                    } else {
+                        document.getElementById('lastPlate').textContent = 'Keine Erkennungen';
+                        document.getElementById('latestImage').src = '';
+                    }
+                });
+        }
+
+        function deleteImages() {
+            if (confirm('Möchten Sie wirklich alle Bilder löschen?')) {
+                axios.delete('/api/delete_images')
+                    .then(() => {
+                        alert('Alle Bilder wurden gelöscht');
+                        refreshData();
+                    })
+                    .catch(error => {
+                        alert('Fehler beim Löschen der Bilder');
+                        console.error(error);
+                    });
+            }
+        }
+
+        setInterval(refreshData, 5000);
+        refreshData();
+    </script>
+</body>
+</html>
