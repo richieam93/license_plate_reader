@@ -1,0 +1,23 @@
+Home Assistant-Konfiguration mit allen wichtigen Details:
+
+1. Kamera-Konfiguration (configuration.yaml)
+camera:
+  - platform: generic
+    name: "Letztes Nummernschild"
+    still_image_url: "http://<IP_DES_CONTAINERS>:8087/static/latest.jpg"
+    refresh_interval: 10
+
+
+2. REST-Sensor-Konfiguration (configuration.yaml)
+sensor:
+  - platform: rest
+    name: "Letztes Nummernschild"
+    resource: "http://<IP_DES_CONTAINERS>:8087/api/latest_plate"
+    method: GET
+    scan_interval: 10
+    value_template: "{{ value_json.plate_number }}"
+    headers:
+      Content-Type: "application/json"
+
+
+

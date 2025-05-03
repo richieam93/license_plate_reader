@@ -1,28 +1,43 @@
 version: '3.8'
 
 services:
+  garage:
+    image: kerberos/kerberos
+    container_name: garage
+    ports:
+      - "8088:80"
+      - "8889:8889"
+    restart: unless-stopped
+    volumes:
+      - /mnt/data/supervisor/homeassistant/license-plate/config:/etc/opt/kerberos/config
+      - /mnt/data/supervisor/homeassistant/license-plate/capture:/etc/opt/kerberosio/capture
+      - /mnt/data/supervisor/homeassistant/license-plate/logs:/etc/opt/kerberosio/logs
+      - /mnt/data/supervisor/homeassistant/license-plate/webconfig:/var/www/web/config
+
   license_plate_reader:
-    build:
-      context: .
-      dockerfile: Dockerfile
+    image: python:3.10-slim
     container_name: license_plate_reader
     environment:
-      - RTSP_STREAM_URL=rtsp://user:password@your_rtsp_stream_url
-      - MQTT_BROKER_URL=mqtt://mqtt_broker_url
-      - MQTT_BROKER_PORT=1883
-      - MQTT_USERNAME=mqtt_user
-      - MQTT_PASSWORD=mqtt_password
-    volumes:
-      - /mnt/data/supervisor/homeassistant/license-plate/data:/data:rw
-    ports:
-      - "5000:5000"  # Webserver Port
-    restart: unless-stopped
 
-  web_server:
-    image: nginx:latest
-    container_name: web_server
+      - TZ=Europe/Zurich
     volumes:
-      - /mnt/data/supervisor/homeassistant/license-plate/web:/usr/share/nginx/html:ro
+      - /mnt/data/supervisor/homeassistant/license-plate/capture:/capture:rw
+      - /mnt/data/supervisor/homeassistant/license-plate/data:/app/data:rw
+      - /mnt/data/supervisor/homeassistant/license-plate/main.py:/app/main.py:ro
+      - /mnt/data/supervisor/homeassistant/license-plate/requirements.txt:/app/requirements.txt:ro
+      - /mnt/data/supervisor/homeassistant/license-plate/static:/app/static
+      - /mnt/data/supervisor/homeassistant/license-plate/templates:/app/templates:ro
+      - /mnt/data/supervisor/homeassistant/license-plate/processed_images:/app/processed_images
+    working_dir: /app
     ports:
-      - "8080:80"
+      - "8087:5000"
     restart: unless-stopped
+    command: >
+      sh -c "
+      apt-get update &&
+      apt-get install -y --no-install-recommends ffmpeg libsm6 libxext6 libxrender-dev tesseract-ocr tesseract-ocr-deu &&
+      python3 -m venv /app/venv &&
+      /app/venv/bin/pip install --upgrade pip &&
+      /app/venv/bin/pip install -r requirements.txt &&
+      /app/venv/bin/python main.py
+      "

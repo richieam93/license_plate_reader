@@ -1,6 +1,8 @@
-easyocr
-imutils
 opencv-python
-matplotlib
-paho-mqtt
+imutils
+pytesseract
 flask
+flask_sqlalchemy
+watchdog
+paho-mqtt
+pytz
